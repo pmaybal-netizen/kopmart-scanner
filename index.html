@@ -11,7 +11,7 @@
     body {
       font-family: Arial, sans-serif;
       margin: 0;
-      padding: 20px;
+      padding: 15px;
       background: #f8d7e8;
       text-align: center;
     }
@@ -21,7 +21,7 @@
       color: white;
       padding: 18px;
       border-radius: 15px;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
     }
 
     h1 {
@@ -29,13 +29,17 @@
       font-size: 24px;
     }
 
-    p {
+    .instruction {
+      background: white;
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 15px;
       color: #555;
     }
 
     #reader {
       width: 100%;
-      max-width: 500px;
+      max-width: 600px;
       margin: auto;
       background: white;
       border-radius: 15px;
@@ -44,17 +48,22 @@
     }
 
     .barcode {
-      margin-top: 20px;
+      margin-top: 15px;
       background: white;
       padding: 15px;
       border-radius: 15px;
       font-size: 20px;
       font-weight: bold;
       color: #800020;
+      word-break: break-all;
+    }
+
+    .success {
+      color: green;
     }
 
     button {
-      margin-top: 20px;
+      margin-top: 15px;
       padding: 14px 25px;
       border: none;
       border-radius: 10px;
@@ -72,112 +81,126 @@
     <p style="color:white;">Barcode Scanner</p>
   </div>
 
+  <div class="instruction">
+    📱 Hold your iPhone about <b>15–25 cm</b> from the barcode.<br>
+    Keep the barcode straight and well lit.
+  </div>
+
   <div id="reader"></div>
 
   <div class="barcode">
     Barcode:
-    <span id="result">Waiting...</span>
+    <span id="result">Scanning...</span>
   </div>
 
   <button onclick="closeScanner()">Close Scanner</button>
 
-  <script>
+<script>
 
-    let scannerStarted = false;
+let scanner = null;
+let alreadyScanned = false;
 
-    function onScanSuccess(decodedText, decodedResult) {
+function onScanSuccess(decodedText, decodedResult) {
 
-      if (scannerStarted === false) return;
+  if (alreadyScanned) {
+    return;
+  }
 
-      scannerStarted = false;
+  alreadyScanned = true;
 
-      document.getElementById("result").innerText = decodedText;
+  document.getElementById("result").innerHTML =
+    '<span class="success">✓ ' + decodedText + '</span>';
 
-      try {
+  if (window.opener && !window.opener.closed) {
 
-        if (window.opener && !window.opener.closed) {
+    window.opener.postMessage(
+      {
+        type: "KOPMART_BARCODE",
+        barcode: decodedText
+      },
+      "*"
+    );
 
-          window.opener.postMessage(
-            {
-              type: "KOPMART_BARCODE",
-              barcode: decodedText
-            },
-            "*"
-          );
+    setTimeout(function() {
+      window.close();
+    }, 1000);
+  }
+}
 
-          setTimeout(function() {
-            window.close();
-          }, 500);
+function onScanFailure(error) {
+  // Continue scanning
+}
 
-        }
+function startScanner() {
 
-      } catch (error) {
+  scanner = new Html5Qrcode("reader");
 
-        console.log(error);
+  const config = {
 
-      }
+    fps: 15,
+
+    qrbox: function(viewfinderWidth, viewfinderHeight) {
+
+      let width = Math.floor(viewfinderWidth * 0.85);
+      let height = Math.floor(viewfinderHeight * 0.35);
+
+      return {
+        width: width,
+        height: height
+      };
+    },
+
+    experimentalFeatures: {
+      useBarCodeDetectorIfSupported: true
     }
 
-    function onScanFailure(error) {
-      // Keep scanning
-    }
+  };
 
-    function startScanner() {
+  scanner.start(
+    {
+      facingMode: "environment"
+    },
 
-      scannerStarted = true;
+    config,
 
-      const html5QrCode =
-        new Html5Qrcode("reader");
+    onScanSuccess,
 
-      html5QrCode.start(
-        { facingMode: "environment" },
+    onScanFailure
 
-        {
-          fps: 10,
+  ).catch(function(error) {
 
-          qrbox: {
-            width: 280,
-            height: 150
-          },
+    document.getElementById("result").innerText =
+      "Camera error: " + error;
 
-          formatsToSupport: [
-            Html5QrcodeSupportedFormats.EAN_13,
-            Html5QrcodeSupportedFormats.EAN_8,
-            Html5QrcodeSupportedFormats.CODE_128,
-            Html5QrcodeSupportedFormats.CODE_39,
-            Html5QrcodeSupportedFormats.UPC_A,
-            Html5QrcodeSupportedFormats.UPC_E
-          ]
-        },
+    console.log(error);
 
-        onScanSuccess,
+  });
+}
 
-        onScanFailure
+function closeScanner() {
 
-      ).catch(function(error) {
+  if (scanner) {
 
-        document.getElementById("result").innerText =
-          "Camera error: " + error;
-
+    scanner.stop()
+      .then(function() {
+        window.close();
+      })
+      .catch(function() {
+        window.close();
       });
 
-    }
+  } else {
 
-    function closeScanner() {
+    window.close();
 
-      if (window.opener) {
-        window.close();
-      } else {
-        history.back();
-      }
+  }
+}
 
-    }
+window.onload = function() {
+  startScanner();
+};
 
-    window.onload = function() {
-      startScanner();
-    };
-
-  </script>
+</script>
 
 </body>
 </html>
