@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>KOPMART Barcode Scanner</title>
+
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f8d7e8;
+      text-align: center;
+    }
+
+    .header {
+      background: #800020;
+      color: white;
+      padding: 18px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    p {
+      color: #555;
+    }
+
+    #reader {
+      width: 100%;
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      border-radius: 15px;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+
+    .barcode {
+      margin-top: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 15px;
+      font-size: 20px;
+      font-weight: bold;
+      color: #800020;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 14px 25px;
+      border: none;
+      border-radius: 10px;
+      background: #800020;
+      color: white;
+      font-size: 16px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="header">
+    <h1>🛒 KOPMART</h1>
+    <p style="color:white;">Barcode Scanner</p>
+  </div>
+
+  <div id="reader"></div>
+
+  <div class="barcode">
+    Barcode:
+    <span id="result">Waiting...</span>
+  </div>
+
+  <button onclick="closeScanner()">Close Scanner</button>
+
+  <script>
+
+    let scannerStarted = false;
+
+    function onScanSuccess(decodedText, decodedResult) {
+
+      if (scannerStarted === false) return;
+
+      scannerStarted = false;
+
+      document.getElementById("result").innerText = decodedText;
+
+      try {
+
+        if (window.opener && !window.opener.closed) {
+
+          window.opener.postMessage(
+            {
+              type: "KOPMART_BARCODE",
+              barcode: decodedText
+            },
+            "*"
+          );
+
+          setTimeout(function() {
+            window.close();
+          }, 500);
+
+        }
+
+      } catch (error) {
+
+        console.log(error);
+
+      }
+    }
+
+    function onScanFailure(error) {
+      // Keep scanning
+    }
+
+    function startScanner() {
+
+      scannerStarted = true;
+
+      const html5QrCode =
+        new Html5Qrcode("reader");
+
+      html5QrCode.start(
+        { facingMode: "environment" },
+
+        {
+          fps: 10,
+
+          qrbox: {
+            width: 280,
+            height: 150
+          },
+
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E
+          ]
+        },
+
+        onScanSuccess,
+
+        onScanFailure
+
+      ).catch(function(error) {
+
+        document.getElementById("result").innerText =
+          "Camera error: " + error;
+
+      });
+
+    }
+
+    function closeScanner() {
+
+      if (window.opener) {
+        window.close();
+      } else {
+        history.back();
+      }
+
+    }
+
+    window.onload = function() {
+      startScanner();
+    };
+
+  </script>
+
+</body>
+</html>
