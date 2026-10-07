@@ -1,75 +1,205 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>KOPMART Barcode Scanner</title>
+  <title>KOPMART EAN-13 Barcode Scanner</title>
 
-  <script src="https://unpkg.com/html5-qrcode"></script>
+  <!-- Barcode Scanner Library -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial, sans-serif;
       margin: 0;
-      padding: 15px;
-      background: #f8d7e8;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: #f8e8ef;
+      color: #4b1024;
       text-align: center;
     }
 
     .header {
-      background: #800020;
+      background: linear-gradient(135deg, #6d1738, #a51d52);
       color: white;
-      padding: 18px;
-      border-radius: 15px;
-      margin-bottom: 15px;
+      padding: 20px 15px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.2);
     }
 
-    h1 {
+    .header h1 {
       margin: 0;
       font-size: 24px;
+      font-weight: bold;
     }
 
-    .instruction {
+    .header p {
+      margin: 6px 0 0;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 15px;
+    }
+
+    .scanner-card {
       background: white;
-      padding: 12px;
-      border-radius: 12px;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 5px 20px rgba(90, 20, 50, 0.15);
+    }
+
+    .scanner-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #7b1740;
+      margin-bottom: 8px;
+    }
+
+    .scanner-info {
+      font-size: 14px;
+      color: #777;
       margin-bottom: 15px;
-      color: #555;
     }
 
     #reader {
       width: 100%;
-      max-width: 600px;
+      max-width: 500px;
       margin: auto;
-      background: white;
+      border: 3px solid #a51d52;
       border-radius: 15px;
-      padding: 10px;
-      box-sizing: border-box;
+      overflow: hidden;
+      background: #111;
     }
 
-    .barcode {
-      margin-top: 15px;
-      background: white;
-      padding: 15px;
-      border-radius: 15px;
-      font-size: 20px;
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 14px 22px;
+      font-size: 16px;
       font-weight: bold;
-      color: #800020;
+      cursor: pointer;
+      margin: 8px 4px;
+    }
+
+    .start-btn {
+      background: #8e1b47;
+      color: white;
+    }
+
+    .stop-btn {
+      background: #555;
+      color: white;
+    }
+
+    .start-btn:hover {
+      background: #6d1738;
+    }
+
+    .stop-btn:hover {
+      background: #333;
+    }
+
+    .status {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 10px;
+      background: #fce8f0;
+      color: #6d1738;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .result {
+      margin-top: 15px;
+      padding: 15px;
+      border-radius: 12px;
+      background: #f5f5f5;
+      display: none;
+    }
+
+    .result-title {
+      font-size: 14px;
+      color: #777;
+      margin-bottom: 5px;
+    }
+
+    .barcode-value {
+      font-size: 25px;
+      font-weight: bold;
+      color: #6d1738;
+      letter-spacing: 2px;
       word-break: break-all;
     }
 
     .success {
-      color: green;
+      color: #087f23;
     }
 
-    button {
-      margin-top: 15px;
-      padding: 14px 25px;
-      border: none;
+    .error {
+      color: #b00020;
+    }
+
+    .manual-box {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+    }
+
+    .manual-box input {
+      width: 100%;
+      padding: 14px;
+      border: 2px solid #ddd;
       border-radius: 10px;
-      background: #800020;
+      font-size: 17px;
+      text-align: center;
+    }
+
+    .manual-btn {
+      background: #d4477a;
       color: white;
-      font-size: 16px;
+    }
+
+    .footer {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #777;
+    }
+
+    /* Hide unnecessary html5-qrcode elements */
+    #reader__dashboard_section_csr,
+    #reader__dashboard_section_swaplink {
+      display: none !important;
+    }
+
+    @media (max-width: 480px) {
+
+      .header h1 {
+        font-size: 21px;
+      }
+
+      .container {
+        padding: 10px;
+      }
+
+      .scanner-card {
+        padding: 15px;
+      }
+
+      #reader {
+        border-width: 2px;
+      }
+
+      button {
+        width: 100%;
+        margin: 5px 0;
+      }
     }
   </style>
 </head>
@@ -78,127 +208,421 @@
 
   <div class="header">
     <h1>🛒 KOPMART</h1>
-    <p style="color:white;">Barcode Scanner</p>
+    <p>Fast EAN-13 Barcode Scanner</p>
   </div>
 
-  <div class="instruction">
-    📱 Hold your iPhone about <b>15–25 cm</b> from the barcode.<br>
-    Keep the barcode straight and well lit.
+  <div class="container">
+
+    <div class="scanner-card">
+
+      <div class="scanner-title">
+        📷 Scan Product Barcode
+      </div>
+
+      <div class="scanner-info">
+        Point your camera at the EAN-13 barcode
+      </div>
+
+      <div id="reader"></div>
+
+      <button class="start-btn" onclick="startScanner()">
+        📷 START SCANNER
+      </button>
+
+      <button class="stop-btn" onclick="stopScanner()">
+        ⛔ STOP
+      </button>
+
+      <div id="status" class="status">
+        Scanner is ready.
+      </div>
+
+      <div id="result" class="result">
+
+        <div class="result-title">
+          Barcode Detected
+        </div>
+
+        <div id="barcodeValue" class="barcode-value">
+        </div>
+
+      </div>
+
+      <div class="manual-box">
+
+        <div class="scanner-title" style="font-size:17px;">
+          ⌨️ Manual Barcode
+        </div>
+
+        <input
+          type="text"
+          id="manualBarcode"
+          placeholder="Enter barcode"
+          inputmode="numeric"
+          autocomplete="off"
+        >
+
+        <button class="manual-btn" onclick="sendManualBarcode()">
+          SEND BARCODE
+        </button>
+
+      </div>
+
+    </div>
+
+    <div class="footer">
+      KOPMART • Koperasi MRSM Tawau Berhad
+    </div>
+
   </div>
 
-  <div id="reader"></div>
-
-  <div class="barcode">
-    Barcode:
-    <span id="result">Scanning...</span>
-  </div>
-
-  <button onclick="closeScanner()">Close Scanner</button>
 
 <script>
 
-let scanner = null;
-let alreadyScanned = false;
+  let html5QrCode = null;
+  let scannerRunning = false;
+  let lastBarcode = "";
+  let lastScanTime = 0;
 
-function onScanSuccess(decodedText, decodedResult) {
 
-  if (alreadyScanned) {
-    return;
-  }
+  /*
+   * ==========================================================
+   * START EAN-13 SCANNER
+   * ==========================================================
+   */
 
-  alreadyScanned = true;
+  async function startScanner() {
 
-  document.getElementById("result").innerHTML =
-    '<span class="success">✓ ' + decodedText + '</span>';
-
-  if (window.opener && !window.opener.closed) {
-
-    window.opener.postMessage(
-      {
-        type: "KOPMART_BARCODE",
-        barcode: decodedText
-      },
-      "*"
-    );
-
-    setTimeout(function() {
-      window.close();
-    }, 1000);
-  }
-}
-
-function onScanFailure(error) {
-  // Continue scanning
-}
-
-function startScanner() {
-
-  scanner = new Html5Qrcode("reader");
-
-  const config = {
-
-    fps: 15,
-
-    qrbox: function(viewfinderWidth, viewfinderHeight) {
-
-      let width = Math.floor(viewfinderWidth * 0.85);
-      let height = Math.floor(viewfinderHeight * 0.35);
-
-      return {
-        width: width,
-        height: height
-      };
-    },
-
-    experimentalFeatures: {
-      useBarCodeDetectorIfSupported: true
+    if (scannerRunning) {
+      setStatus("Scanner is already running.", "success");
+      return;
     }
 
-  };
+    try {
 
-  scanner.start(
-    {
-      facingMode: "environment"
-    },
+      setStatus("Starting camera...");
 
-    config,
+      html5QrCode = new Html5Qrcode("reader");
 
-    onScanSuccess,
+      const config = {
 
-    onScanFailure
+        /*
+         * Faster scanning
+         */
+        fps: 20,
 
-  ).catch(function(error) {
+        /*
+         * Smaller scanning area = less processing
+         */
+        qrbox: {
+          width: 300,
+          height: 120
+        },
 
-    document.getElementById("result").innerText =
-      "Camera error: " + error;
+        /*
+         * IMPORTANT:
+         * ONLY EAN-13
+         */
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.EAN_13
+        ],
 
-    console.log(error);
+        /*
+         * Keep aspect ratio suitable for phone camera
+         */
+        aspectRatio: 1.7777778
 
-  });
-}
+      };
 
-function closeScanner() {
 
-  if (scanner) {
+      await html5QrCode.start(
 
-    scanner.stop()
-      .then(function() {
-        window.close();
-      })
-      .catch(function() {
-        window.close();
-      });
+        {
+          facingMode: "environment"
+        },
 
-  } else {
+        config,
 
-    window.close();
+        function(decodedText, decodedResult) {
+
+          handleBarcode(decodedText);
+
+        },
+
+        function(errorMessage) {
+
+          /*
+           * Do not display every failed scan.
+           * This would slow down the interface.
+           */
+
+        }
+
+      );
+
+      scannerRunning = true;
+
+      setStatus(
+        "📷 Scanner active — point at an EAN-13 barcode.",
+        "success"
+      );
+
+    }
+
+    catch (error) {
+
+      console.error(error);
+
+      scannerRunning = false;
+
+      setStatus(
+        "Unable to start camera. Please allow camera permission.",
+        "error"
+      );
+
+    }
 
   }
-}
 
-window.onload = function() {
-  startScanner();
-};
+
+  /*
+   * ==========================================================
+   * BARCODE DETECTED
+   * ==========================================================
+   */
+
+  async function handleBarcode(barcode) {
+
+    barcode = String(barcode).trim();
+
+    if (!barcode) {
+      return;
+    }
+
+
+    /*
+     * Prevent duplicate detections
+     */
+
+    const now = Date.now();
+
+    if (
+      barcode === lastBarcode &&
+      now - lastScanTime < 1500
+    ) {
+      return;
+    }
+
+    lastBarcode = barcode;
+    lastScanTime = now;
+
+
+    /*
+     * Display barcode
+     */
+
+    document.getElementById("barcodeValue").textContent = barcode;
+
+    document.getElementById("result").style.display = "block";
+
+
+    setStatus(
+      "✅ Barcode detected! Sending to KOPMART POS...",
+      "success"
+    );
+
+
+    /*
+     * STOP CAMERA IMMEDIATELY
+     *
+     * This makes the scanner feel much faster.
+     */
+
+    await stopScanner();
+
+
+    /*
+     * Send barcode back to KOPMART POS
+     */
+
+    sendBarcodeToPOS(barcode);
+
+  }
+
+
+  /*
+   * ==========================================================
+   * SEND BARCODE TO KOPMART POS
+   * ==========================================================
+   */
+
+  function sendBarcodeToPOS(barcode) {
+
+    if (window.opener && !window.opener.closed) {
+
+      window.opener.postMessage(
+
+        {
+          type: "KOPMART_BARCODE",
+          barcode: barcode
+        },
+
+        "*"
+
+      );
+
+      setStatus(
+        "✅ Barcode sent to KOPMART POS.",
+        "success"
+      );
+
+    }
+
+    else {
+
+      setStatus(
+        "Barcode detected, but KOPMART POS window was not found.",
+        "error"
+      );
+
+    }
+
+  }
+
+
+  /*
+   * ==========================================================
+   * STOP SCANNER
+   * ==========================================================
+   */
+
+  async function stopScanner() {
+
+    if (!html5QrCode || !scannerRunning) {
+      return;
+    }
+
+    try {
+
+      await html5QrCode.stop();
+
+    }
+
+    catch (error) {
+
+      console.log("Scanner stop:", error);
+
+    }
+
+    scannerRunning = false;
+
+  }
+
+
+  /*
+   * ==========================================================
+   * MANUAL BARCODE
+   * ==========================================================
+   */
+
+  function sendManualBarcode() {
+
+    const input =
+      document.getElementById("manualBarcode");
+
+    const barcode =
+      input.value.trim();
+
+
+    if (!barcode) {
+
+      setStatus(
+        "Please enter a barcode.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    document.getElementById("barcodeValue").textContent =
+      barcode;
+
+    document.getElementById("result").style.display =
+      "block";
+
+
+    sendBarcodeToPOS(barcode);
+
+  }
+
+
+  /*
+   * ==========================================================
+   * STATUS MESSAGE
+   * ==========================================================
+   */
+
+  function setStatus(message, type) {
+
+    const status =
+      document.getElementById("status");
+
+    status.textContent = message;
+
+    status.className = "status";
+
+    if (type === "success") {
+      status.classList.add("success");
+    }
+
+    if (type === "error") {
+      status.classList.add("error");
+    }
+
+  }
+
+
+  /*
+   * ==========================================================
+   * RECEIVE / CLOSE HANDLING
+   * ==========================================================
+   */
+
+  window.addEventListener(
+    "beforeunload",
+    function() {
+
+      if (scannerRunning) {
+        stopScanner();
+      }
+
+    }
+  );
+
+
+  /*
+   * ==========================================================
+   * ENTER KEY FOR MANUAL BARCODE
+   * ==========================================================
+   */
+
+  document
+    .getElementById("manualBarcode")
+    .addEventListener(
+      "keydown",
+      function(event) {
+
+        if (event.key === "Enter") {
+
+          sendManualBarcode();
+
+        }
+
+      }
+    );
+
 
 </script>
 
